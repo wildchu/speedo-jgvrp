@@ -14,19 +14,41 @@
     }
 
     body {
-      /* Background gelap semi-transparan untuk preview di browser */
-      /* Di FiveM ini tetap tembus pandang atau bisa ubah ke transparent */
-      background: transparent; 
+      background: transparent;
       overflow: hidden;
       font-family: 'Rajdhani', sans-serif;
       height: 100vh;
       width: 100vw;
     }
 
+    /* Container utama pojok kanan bawah */
     .hud-wrapper {
       position: absolute;
       bottom: 25px;
       right: 35px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    /* Kotak debugger tepat di atas speedometer */
+    #debug-box {
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid #00f0ff;
+      color: #00ff66;
+      font-family: monospace;
+      font-size: 10px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      max-width: 260px;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .main-hud {
       display: flex;
       align-items: flex-end;
       gap: 16px;
@@ -96,7 +118,6 @@
       padding-left: 10px;
     }
 
-    /* Top Row: Sen & Kunci */
     .top-indicator-row {
       display: flex;
       align-items: center;
@@ -140,7 +161,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* Segmen Bar RPM */
     .segments {
       display: flex;
       gap: 3px;
@@ -159,29 +179,15 @@
       box-shadow: 0 0 6px #00f0ff;
     }
 
-    /* Baris Ikon Status Bawah */
     .status-icons {
       display: flex;
       gap: 10px;
     }
 
-    /* Kelas Warna Aktif */
-    .fill-cyan {
-      fill: #00f0ff !important;
-      filter: drop-shadow(0 0 6px #00f0ff);
-    }
+    .fill-cyan { fill: #00f0ff !important; filter: drop-shadow(0 0 6px #00f0ff); }
+    .fill-red { fill: #ff3344 !important; filter: drop-shadow(0 0 6px #ff3344); }
+    .fill-green { fill: #00ff88 !important; filter: drop-shadow(0 0 6px #00ff88); }
 
-    .fill-red {
-      fill: #ff3344 !important;
-      filter: drop-shadow(0 0 6px #ff3344);
-    }
-
-    .fill-green {
-      fill: #00ff88 !important;
-      filter: drop-shadow(0 0 6px #00ff88);
-    }
-
-    /* Animasi Sen Kedip */
     .blinking {
       animation: blink 0.6s infinite alternate ease-in-out;
       fill: #00ff88 !important;
@@ -197,131 +203,138 @@
 <body>
 
   <div class="hud-wrapper">
-    <!-- Bar Health & Fuel Vertikal -->
-    <div class="bars-container">
-      <div class="bar-item">
-        <span class="bar-label">H</span>
-        <div class="bar-track">
-          <div class="bar-fill health-fill" id="health-bar"></div>
+    <!-- Kotak debugger tepat di atas angka speedometer -->
+    <div id="debug-box">Menunggu data FiveM...</div>
+
+    <div class="main-hud">
+      <!-- Bar Health & Fuel -->
+      <div class="bars-container">
+        <div class="bar-item">
+          <span class="bar-label">H</span>
+          <div class="bar-track">
+            <div class="bar-fill health-fill" id="health-bar"></div>
+          </div>
+          <span class="bar-percent health-txt" id="health-val">80%</span>
         </div>
-        <span class="bar-percent health-txt" id="health-val">80%</span>
-      </div>
 
-      <div class="bar-item">
-        <span class="bar-label">F</span>
-        <div class="bar-track">
-          <div class="bar-fill fuel-fill" id="fuel-bar"></div>
+        <div class="bar-item">
+          <span class="bar-label">F</span>
+          <div class="bar-track">
+            <div class="bar-fill fuel-fill" id="fuel-bar"></div>
+          </div>
+          <span class="bar-percent fuel-txt" id="fuel-val">100%</span>
         </div>
-        <span class="bar-percent fuel-txt" id="fuel-val">100%</span>
-      </div>
-    </div>
-
-    <!-- Speedometer -->
-    <div class="speed-block">
-      
-      <!-- Sen Kiri, Lock, Sen Kanan -->
-      <div class="top-indicator-row">
-        <!-- Arrow Left -->
-        <svg class="svg-icon" id="ico-sen-left" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-        
-        <!-- Lock -->
-        <svg class="svg-icon fill-green" id="ico-lock" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6-5c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3z"/></svg>
-        
-        <!-- Arrow Right -->
-        <svg class="svg-icon" id="ico-sen-right" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
       </div>
 
-      <!-- Angka Kecepatan -->
-      <div class="speed-val" id="speed">0</div>
+      <!-- Speedometer -->
+      <div class="speed-block">
+        <div class="top-indicator-row">
+          <svg class="svg-icon" id="ico-sen-left" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          <svg class="svg-icon fill-green" id="ico-lock" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6-5c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3z"/></svg>
+          <svg class="svg-icon" id="ico-sen-right" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+        </div>
 
-      <!-- MPH & Odometer Miles -->
-      <div class="speed-sub">
-        <span class="unit-val">MPH</span>
-        <span class="mileage-val"><span id="mileage">00124</span> MI</span>
+        <div class="speed-val" id="speed">0</div>
+
+        <div class="speed-sub">
+          <span class="unit-val">MPH</span>
+          <span class="mileage-val"><span id="mileage">00124</span> MI</span>
+        </div>
+
+        <div class="segments" id="seg-wrapper">
+          <div class="seg active"></div>
+          <div class="seg active"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+        </div>
+
+        <div class="status-icons">
+          <svg class="svg-icon fill-red" id="ico-seatbelt" viewBox="0 0 24 24"><path d="M16 3H8C6.9 3 6 3.9 6 5v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4.5l-3.5 3.5 3.5 3.5V16l-5-5 5-5v1.5z"/></svg>
+          <svg class="svg-icon fill-green" id="ico-engine" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.42 1.08-4.6 2.79-6.07l-1.4-1.42A9.914 9.914 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.84-1.19-5.4-3.17-6.83z"/></svg>
+          <svg class="svg-icon fill-cyan" id="ico-lights" viewBox="0 0 24 24"><path d="M12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm-2 18h4v1h-4v-1zm-1 3h6v1H9v-1z"/></svg>
+          <svg class="svg-icon" id="ico-handbrake" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+        </div>
       </div>
-
-      <!-- Titik RPM -->
-      <div class="segments" id="seg-wrapper">
-        <div class="seg active"></div>
-        <div class="seg active"></div>
-        <div class="seg"></div>
-        <div class="seg"></div>
-        <div class="seg"></div>
-        <div class="seg"></div>
-        <div class="seg"></div>
-        <div class="seg"></div>
-      </div>
-
-      <!-- Ikon Bawah: Seatbelt, Mesin, Lampu, Rem Tangan -->
-      <div class="status-icons">
-        <!-- Seatbelt -->
-        <svg class="svg-icon fill-red" id="ico-seatbelt" viewBox="0 0 24 24"><path d="M16 3H8C6.9 3 6 3.9 6 5v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4.5l-3.5 3.5 3.5 3.5V16l-5-5 5-5v1.5z"/></svg>
-        
-        <!-- Engine / Power -->
-        <svg class="svg-icon fill-green" id="ico-engine" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.42 1.08-4.6 2.79-6.07l-1.4-1.42A9.914 9.914 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.84-1.19-5.4-3.17-6.83z"/></svg>
-        
-        <!-- Light -->
-        <svg class="svg-icon fill-cyan" id="ico-lights" viewBox="0 0 24 24"><path d="M12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm-2 18h4v1h-4v-1zm-1 3h6v1H9v-1z"/></svg>
-        
-        <!-- Handbrake / Brake -->
-        <svg class="svg-icon" id="ico-handbrake" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-      </div>
-
     </div>
   </div>
 
   <script>
-    // Menerima data NUI dari FiveM JG:VRP
+    // Listener pesan dari NUI FiveM
     window.addEventListener('message', (event) => {
       const d = event.data;
       if (!d) return;
 
-      if (d.speed !== undefined) {
-        document.getElementById('speed').innerText = Math.round(d.speed);
+      // Debug: tampilkan ringkasan key data yang masuk
+      const debugEl = document.getElementById('debug-box');
+      if (debugEl) {
+        debugEl.innerText = JSON.stringify(d);
       }
-      if (d.fuel !== undefined) {
-        const fuel = Math.round(d.fuel);
+
+      // Deteksi Speed
+      const curSpeed = d.speed ?? d.speedo ?? d.currentSpeed ?? d.velocity;
+      if (curSpeed !== undefined) {
+        document.getElementById('speed').innerText = Math.round(curSpeed);
+      }
+
+      // Deteksi Fuel
+      const curFuel = d.fuel ?? d.fuelLevel ?? d.gas;
+      if (curFuel !== undefined) {
+        const fuel = Math.round(curFuel);
         document.getElementById('fuel-bar').style.height = `${fuel}%`;
         document.getElementById('fuel-val').innerText = `${fuel}%`;
       }
-      if (d.health !== undefined) {
-        const health = Math.round(d.health);
+
+      // Deteksi Engine Health
+      let curHealth = d.health ?? d.engineHealth ?? d.bodyHealth;
+      if (curHealth !== undefined) {
+        if (curHealth > 100) curHealth = (curHealth / 1000) * 100;
+        const health = Math.round(curHealth);
         document.getElementById('health-bar').style.height = `${health}%`;
         document.getElementById('health-val').innerText = `${health}%`;
       }
-      if (d.mileage !== undefined || d.odometer !== undefined) {
-        const miles = Math.round(d.mileage || d.odometer);
-        document.getElementById('mileage').innerText = miles.toString().padStart(5, '0');
+
+      // Deteksi Odometer
+      const curMiles = d.mileage ?? d.odometer ?? d.distance;
+      if (curMiles !== undefined) {
+        document.getElementById('mileage').innerText = Math.round(curMiles).toString().padStart(5, '0');
       }
 
-      // Sen Kiri / Kanan
-      toggleBlink('ico-sen-left', d.signalLeft || d.indicatorLeft);
-      toggleBlink('ico-sen-right', d.signalRight || d.indicatorRight);
+      // Sen
+      toggleBlink('ico-sen-left', d.signalLeft || d.indicatorLeft || d.turnSignalLeft);
+      toggleBlink('ico-sen-right', d.signalRight || d.indicatorRight || d.turnSignalRight);
 
-      // Status Kunci (Lock / Unlock)
-      if (d.locked !== undefined) {
-        toggleColor('ico-lock', d.locked, 'fill-red', 'fill-green');
+      // Lock
+      const isLocked = d.locked ?? d.isLocked ?? (d.doorLockStatus === 2);
+      if (isLocked !== undefined) {
+        toggleColor('ico-lock', isLocked, 'fill-red', 'fill-green');
       }
 
-      // Status Mesin (Engine)
-      if (d.engine !== undefined || d.engineRunning !== undefined) {
-        const isEngineOn = d.engine ?? d.engineRunning;
-        toggleColor('ico-engine', isEngineOn, 'fill-green');
+      // Engine
+      const isEngine = d.engine ?? d.engineRunning ?? d.isEngineOn;
+      if (isEngine !== undefined) {
+        toggleColor('ico-engine', isEngine, 'fill-green');
       }
 
-      // Lampu Mobil
-      if (d.lights !== undefined) {
-        toggleColor('ico-lights', d.lights, 'fill-cyan');
+      // Lights
+      const isLight = d.lights ?? d.lightState ?? d.headlights;
+      if (isLight !== undefined) {
+        toggleColor('ico-lights', isLight, 'fill-cyan');
       }
 
-      // Seatbelt (Merah kalau belum pasang)
-      if (d.seatbelt !== undefined) {
-        toggleColor('ico-seatbelt', !d.seatbelt, 'fill-red');
+      // Seatbelt
+      const isBelt = d.seatbelt ?? d.seatbeltOn;
+      if (isBelt !== undefined) {
+        toggleColor('ico-seatbelt', !isBelt, 'fill-red');
       }
 
-      // Rem Tangan
-      if (d.handbrake !== undefined) {
-        toggleColor('ico-handbrake', d.handbrake, 'fill-red');
+      // Handbrake
+      const isBrake = d.handbrake ?? d.handbrakeOn;
+      if (isBrake !== undefined) {
+        toggleColor('ico-handbrake', isBrake, 'fill-red');
       }
     });
 
