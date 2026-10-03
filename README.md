@@ -2,44 +2,44 @@
 
 Custom HUD Speedometer Analog bergaya **Cyberpunk / Dark Neon** yang dirancang khusus untuk Jogjagamers GTA:VRP (CEF / SA-MP / RAGEMP).
 
-## ✨ Fitur & Karakteristik Desain
+## ✨ Karakteristik Desain & Tata Letak Terintegrasi (Compact Single-Dial)
 
-1. **Dial & Gauge Speedometer Analog**:
-   - Bentuk circular gauge sport racing dengan efek **Dark Glassmorphism** (`#080e18`) dan bezel bercahaya neon cyan (`#00f0ff`).
-   - Garis ukur (*ticks*) dan angka kecepatan (0–200) di-generate secara matematis menggunakan SVG beresolusi tinggi (tajam di resolusi 1080p, 2K, hingga 4K).
-   - Zona kecepatan tinggi (160–200) memiliki aksen *redline neon* (`#ff2a55`).
-   - Jarum penunjuk analog (*needle*) menyala merah neon futuristik dengan titik pivot LED cyan, berputar halus dengan CSS transform interpolasi 60+ FPS.
-   - Dynamic Speed Arc yang menyala secara progresif mengikuti jarum analog.
+1. **Integrated All-in-One Circular Gauge**:
+   - Desain piringan tunggal kompak tanpa panel terpisah di sisi luar.
+   - Efek **Dark Glassmorphism** (`#080e18`) dengan ring luar neon cyan (`#00f0ff`) dan bezel grid futuristik.
+   - Jarum penunjuk (*needle*) analog neon crimson-red berputar presisi pada poros tengah.
 
-2. **Internal Cluster Elements**:
-   - **Sen Kiri & Kanan**: Panah chevron neon hijau (`#00ff88`) yang berkedip dinamis saat aktif.
-   - **Headlight Status**: Ikon lampu dengan mode redup, menyala cyan (`#00f0ff`), dan mode High Beam (`#1a8cff`).
-   - **Indikator Mesin**: Ikon engine check yang menyala hijau saat mesin aktif.
-   - **Indikator Seatbelt**: Peringatan merah menyala saat sabuk pengaman belum terpasang.
-   - **Gear Indicator**: Badge heksagonal futuristik dengan aksen amber (`GEAR 1`, `R`, `N`).
-   - **Odometer Box**: Kotak digital LCD di bagian bawah dial dengan format desimal (`0.0 MI` / `KM`).
-   - **RPM Arc & Segmen Bar**: Arc RPM dinamis di dalam dial yang berubah menjadi merah menyala saat mencapai *redline* (> 85% RPM), sinkron dengan 8 blok segmen LED.
+2. **Integrasi Bar HP (Health) & GAS (Fuel) di Dalam Piringan**:
+   - Bar **HP** ditempatkan di sisi kiri dalam piringan dial dengan track cyber vertikal dan persentase numerik cyan (`#00ffcc`).
+   - Bar **GAS** ditempatkan di sisi kanan dalam piringan dial dengan track cyber vertikal dan persentase numerik amber (`#ff9d00`).
+   - Kedua bar berubah menjadi peringatan merah menyala saat kondisi kritis (HP ≤ 25%, Bensin ≤ 15%).
 
-3. **Cluster Health & Fuel Bar**:
-   - Terletak di sisi kiri dial gauge dalam kapsul glassmorphism gelap.
-   - **Health Bar**: Bar vertikal liquid neon cyan-hijau dengan peringatan merah saat HP kritis (≤ 25%).
-   - **Fuel Bar**: Bar vertikal liquid neon amber-orange dengan peringatan merah saat bensin kritis (≤ 15%).
+3. **Teks Kecepatan & Unit (MPH / KMH / KNOTS)**:
+   - Terletak di area tengah atas dial, tersusun vertikal secara rapi.
+   - Bebas dari tumpukan jarum dan tutup poros (*needle cap*), memberikan keterbacaan instan yang tajam.
 
-4. **Kompatibilitas Penuh API JG:VRP**:
-   File ini 100% kompatibel dan siap pakai dengan fungsi resmi dari JG:VRP:
-   - `setSpeed(speed)`
-   - `setSpeedMode(mode)`
-   - `setRPM(rpm)`
-   - `setFuel(fuel)`
-   - `setHealth(health)`
-   - `setGear(gear)`
-   - `setEngine(state)`
-   - `setHeadlights(state)`
-   - `setLeftIndicator(state)`
-   - `setRightIndicator(state)`
-   - `setSeatbelts(state)`
-   - `setOdometer(distance)`
+4. **Cluster Status Bawah (Near Gear Box)**:
+   - Bar status horizontal yang memuat 5 indikator bersebelahan:
+     `[ Sen Kiri ◀ ]  [ 💡 Headlights ]  [ ⚙️ Engine ]  [ 🛡️ Seatbelt ]  [ Sen Kanan ▶ ]`
+   - Berdampingan langsung dengan badge heksagonal **GEAR** (`GEAR 1`, `R`, `N`), **Segmen Bar RPM**, dan **Digital Odometer Box** (`0.0 MI` / `KM`).
 
-5. **Built-in Interactive Test Controller**:
-   - Jika file `index.html` dibuka langsung di browser (Chrome / Edge / Firefox), terdapat tombol `⚡ DEMO HUD` di pojok kiri atas untuk menguji slider kecepatan, RPM, status lampu, sen, bensin, dan simulasi **Auto Drive**.
-   - Tombol demo dapat disembunyikan kapan saja atau ditekan `F2` untuk toggle.
+## ⚙️ Kompatibilitas API & Fungsi Global JG:VRP
+
+File `index.html` ini mengimplementasikan fungsi standar JG:VRP:
+- `setSpeed(speed)` — Mengonversi kecepatan ($m/s$), memutar jarum analog (-135° s/d +135°), dan mengisi dynamic speed arc.
+- `setSpeedMode(mode)` — Mode 0: KMH, 1: MPH, 2: Knots.
+- `setRPM(rpm)` — Menggerakkan busur RPM dial & 8 segmen bar LED.
+- `setFuel(fuel)` — Mengatur persentase bensin mini bar kanan (`#fuel-bar`).
+- `setHealth(health)` — Mengatur persentase kondisi kendaraan mini bar kiri (`#health-bar`).
+- `setGear(gear)` — Mengatur posisi gigi (`R`, `N`, `GEAR 1`, dll.).
+- `setEngine(state)` — Menyalakan/mematikan lampu indikator mesin.
+- `setHeadlights(state)` — 0: Off, 1: On (Cyan), 2: High Beam (Biru).
+- `setLeftIndicator(state)` — Indikator sen kiri berkedip hijau.
+- `setRightIndicator(state)` — Indikator sen kanan berkedip hijau.
+- `setSeatbelts(state)` — Peringatan sabuk pengaman merah menyala jika belum dipasang.
+- `setOdometer(distance)` — Memperbarui angka jarak tempuh digital.
+
+## 🧪 Browser Testing & Demo Controller
+
+- Buka langsung file `index.html` di browser apa pun untuk menguji tampilan.
+- Klik tombol **`⚡ DEMO HUD`** di pojok kiri atas atau tekan tombol keyboard **`F2`** untuk membuka panel pengujian (slider speed, rpm, hp, gas, dan tombol simulasi **Auto Drive**).
