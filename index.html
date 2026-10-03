@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Speedometer JG:VRP</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      /* Background gelap semi-transparan untuk preview di browser */
+      /* Di FiveM ini tetap tembus pandang atau bisa ubah ke transparent */
+      background: transparent; 
+      overflow: hidden;
+      font-family: 'Rajdhani', sans-serif;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .hud-wrapper {
+      position: absolute;
+      bottom: 25px;
+      right: 35px;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    /* === BAR HEALTH & FUEL === */
+    .bars-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bar-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .bar-track {
+      width: 10px;
+      height: 75px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      border-radius: 5px;
+      transition: height 0.2s ease-out;
+    }
+
+    .health-fill {
+      background: #00ffcc;
+      box-shadow: 0 0 10px #00ffcc;
+      height: 80%;
+    }
+
+    .fuel-fill {
+      background: #ff9d00;
+      box-shadow: 0 0 10px #ff9d00;
+      height: 100%;
+    }
+
+    .bar-percent {
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .health-txt { color: #00ffcc; }
+    .fuel-txt { color: #ff9d00; }
+
+    /* === SPEEDOMETER BLOCK === */
+    .speed-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border-left: 2.5px solid #00f0ff;
+      padding-left: 10px;
+    }
+
+    /* Top Row: Sen & Kunci */
+    .top-indicator-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 4px;
+    }
+
+    .svg-icon {
+      width: 15px;
+      height: 15px;
+      fill: rgba(255, 255, 255, 0.25);
+      transition: fill 0.2s, filter 0.2s;
+    }
+
+    .speed-val {
+      font-size: 60px;
+      font-weight: 700;
+      line-height: 0.85;
+      color: #00f0ff;
+      text-shadow: 0 0 12px rgba(0, 240, 255, 0.85);
+    }
+
+    .speed-sub {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .unit-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #00f0ff;
+      letter-spacing: 1px;
+    }
+
+    .mileage-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.5px;
+    }
+
+    /* Segmen Bar RPM */
+    .segments {
+      display: flex;
+      gap: 3px;
+      margin: 8px 0 6px 0;
+    }
+
+    .seg {
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      background: rgba(0, 240, 255, 0.18);
+    }
+
+    .seg.active {
+      background: #00f0ff;
+      box-shadow: 0 0 6px #00f0ff;
+    }
+
+    /* Baris Ikon Status Bawah */
+    .status-icons {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Kelas Warna Aktif */
+    .fill-cyan {
+      fill: #00f0ff !important;
+      filter: drop-shadow(0 0 6px #00f0ff);
+    }
+
+    .fill-red {
+      fill: #ff3344 !important;
+      filter: drop-shadow(0 0 6px #ff3344);
+    }
+
+    .fill-green {
+      fill: #00ff88 !important;
+      filter: drop-shadow(0 0 6px #00ff88);
+    }
+
+    /* Animasi Sen Kedip */
+    .blinking {
+      animation: blink 0.6s infinite alternate ease-in-out;
+      fill: #00ff88 !important;
+      filter: drop-shadow(0 0 6px #00ff88);
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.1; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hud-wrapper">
+    <!-- Bar Health & Fuel Vertikal -->
+    <div class="bars-container">
+      <div class="bar-item">
+        <span class="bar-label">H</span>
+        <div class="bar-track">
+          <div class="bar-fill health-fill" id="health-bar"></div>
+        </div>
+        <span class="bar-percent health-txt" id="health-val">80%</span>
+      </div>
+
+      <div class="bar-item">
+        <span class="bar-label">F</span>
+        <div class="bar-track">
+          <div class="bar-fill fuel-fill" id="fuel-bar"></div>
+        </div>
+        <span class="bar-percent fuel-txt" id="fuel-val">100%</span>
+      </div>
+    </div>
+
+    <!-- Speedometer -->
+    <div class="speed-block">
+      
+      <!-- Sen Kiri, Lock, Sen Kanan -->
+      <div class="top-indicator-row">
+        <!-- Arrow Left -->
+        <svg class="svg-icon" id="ico-sen-left" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        
+        <!-- Lock -->
+        <svg class="svg-icon fill-green" id="ico-lock" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6-5c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3z"/></svg>
+        
+        <!-- Arrow Right -->
+        <svg class="svg-icon" id="ico-sen-right" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </div>
+
+      <!-- Angka Kecepatan -->
+      <div class="speed-val" id="speed">0</div>
+
+      <!-- MPH & Odometer Miles -->
+      <div class="speed-sub">
+        <span class="unit-val">MPH</span>
+        <span class="mileage-val"><span id="mileage">00124</span> MI</span>
+      </div>
+
+      <!-- Titik RPM -->
+      <div class="segments" id="seg-wrapper">
+        <div class="seg active"></div>
+        <div class="seg active"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+      </div>
+
+      <!-- Ikon Bawah: Seatbelt, Mesin, Lampu, Rem Tangan -->
+      <div class="status-icons">
+        <!-- Seatbelt -->
+        <svg class="svg-icon fill-red" id="ico-seatbelt" viewBox="0 0 24 24"><path d="M16 3H8C6.9 3 6 3.9 6 5v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4.5l-3.5 3.5 3.5 3.5V16l-5-5 5-5v1.5z"/></svg>
+        
+        <!-- Engine / Power -->
+        <svg class="svg-icon fill-green" id="ico-engine" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.42 1.08-4.6 2.79-6.07l-1.4-1.42A9.914 9.914 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.84-1.19-5.4-3.17-6.83z"/></svg>
+        
+        <!-- Light -->
+        <svg class="svg-icon fill-cyan" id="ico-lights" viewBox="0 0 24 24"><path d="M12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm-2 18h4v1h-4v-1zm-1 3h6v1H9v-1z"/></svg>
+        
+        <!-- Handbrake / Brake -->
+        <svg class="svg-icon" id="ico-handbrake" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Menerima data NUI dari FiveM JG:VRP
+    window.addEventListener('message', (event) => {
+      const d = event.data;
+      if (!d) return;
+
+      if (d.speed !== undefined) {
+        document.getElementById('speed').innerText = Math.round(d.speed);
+      }
+      if (d.fuel !== undefined) {
+        const fuel = Math.round(d.fuel);
+        document.getElementById('fuel-bar').style.height = `${fuel}%`;
+        document.getElementById('fuel-val').innerText = `${fuel}%`;
+      }
+      if (d.health !== undefined) {
+        const health = Math.round(d.health);
+        document.getElementById('health-bar').style.height = `${health}%`;
+        document.getElementById('health-val').innerText = `${health}%`;
+      }
+      if (d.mileage !== undefined || d.odometer !== undefined) {
+        const miles = Math.round(d.mileage || d.odometer);
+        document.getElementById('mileage').innerText = miles.toString().padStart(5, '0');
+      }
+
+      // Sen Kiri / Kanan
+      toggleBlink('ico-sen-left', d.signalLeft || d.indicatorLeft);
+      toggleBlink('ico-sen-right', d.signalRight || d.indicatorRight);
+
+      // Status Kunci (Lock / Unlock)
+      if (d.locked !== undefined) {
+        toggleColor('ico-lock', d.locked, 'fill-red', 'fill-green');
+      }
+
+      // Status Mesin (Engine)
+      if (d.engine !== undefined || d.engineRunning !== undefined) {
+        const isEngineOn = d.engine ?? d.engineRunning;
+        toggleColor('ico-engine', isEngineOn, 'fill-green');
+      }
+
+      // Lampu Mobil
+      if (d.lights !== undefined) {
+        toggleColor('ico-lights', d.lights, 'fill-cyan');
+      }
+
+      // Seatbelt (Merah kalau belum pasang)
+      if (d.seatbelt !== undefined) {
+        toggleColor('ico-seatbelt', !d.seatbelt, 'fill-red');
+      }
+
+      // Rem Tangan
+      if (d.handbrake !== undefined) {
+        toggleColor('ico-handbrake', d.handbrake, 'fill-red');
+      }
+    });
+
+    function toggleColor(id, condition, activeClass, inactiveClass = '') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (condition) {
+        el.classList.add(activeClass);
+        if (inactiveClass) el.classList.remove(inactiveClass);
+      } else {
+        el.classList.remove(activeClass);
+        if (inactiveClass) el.classList.add(inactiveClass);
+      }
+    }
+
+    function toggleBlink(id, condition) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (condition) {
+        el.classList.add('blinking');
+      } else {
+        el.classList.remove('blinking');
+      }
+    }
+  </script>
+</body>
+</html>
