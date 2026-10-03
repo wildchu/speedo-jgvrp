@@ -21,7 +21,7 @@
       width: 100vw;
     }
 
-    /* Container utama di pojok kanan bawah */
+    /* Container HUD pojok kanan bawah */
     .hud-wrapper {
       position: absolute;
       bottom: 25px;
@@ -29,10 +29,8 @@
       display: flex;
       align-items: flex-end;
       gap: 16px;
-      transition: opacity 0.3s ease;
     }
 
-    /* Class untuk sembunyikan HUD jika keluar kendaraan */
     .hidden {
       display: none !important;
     }
@@ -170,20 +168,9 @@
     }
 
     /* Kelas Warna Aktif */
-    .fill-cyan {
-      fill: #00f0ff !important;
-      filter: drop-shadow(0 0 6px #00f0ff);
-    }
-
-    .fill-red {
-      fill: #ff3344 !important;
-      filter: drop-shadow(0 0 6px #ff3344);
-    }
-
-    .fill-green {
-      fill: #00ff88 !important;
-      filter: drop-shadow(0 0 6px #00ff88);
-    }
+    .fill-cyan { fill: #00f0ff !important; filter: drop-shadow(0 0 6px #00f0ff); }
+    .fill-red { fill: #ff3344 !important; filter: drop-shadow(0 0 6px #ff3344); }
+    .fill-green { fill: #00ff88 !important; filter: drop-shadow(0 0 6px #00ff88); }
 
     .blinking {
       animation: blink 0.5s infinite alternate ease-in-out;
@@ -221,7 +208,6 @@
 
     <!-- Speedometer -->
     <div class="speed-block">
-      <!-- Top Row: Sen & Lock -->
       <div class="top-indicator-row">
         <!-- Sen Kiri -->
         <svg class="svg-icon" id="ico-sen-left" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
@@ -240,7 +226,7 @@
         <span class="mileage-val"><span id="mileage">00000</span> MI</span>
       </div>
 
-      <!-- Titik RPM (8 Grid) -->
+      <!-- Segmen RPM -->
       <div class="segments" id="seg-wrapper">
         <div class="seg"></div>
         <div class="seg"></div>
@@ -252,18 +238,11 @@
         <div class="seg"></div>
       </div>
 
-      <!-- Status Icons -->
+      <!-- Baris Status Ikon -->
       <div class="status-icons">
-        <!-- Seatbelt -->
         <svg class="svg-icon" id="ico-seatbelt" viewBox="0 0 24 24"><path d="M16 3H8C6.9 3 6 3.9 6 5v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4.5l-3.5 3.5 3.5 3.5V16l-5-5 5-5v1.5z"/></svg>
-        
-        <!-- Engine -->
         <svg class="svg-icon" id="ico-engine" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.42 1.08-4.6 2.79-6.07l-1.4-1.42A9.914 9.914 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.84-1.19-5.4-3.17-6.83z"/></svg>
-        
-        <!-- Lights -->
         <svg class="svg-icon" id="ico-lights" viewBox="0 0 24 24"><path d="M12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm-2 18h4v1h-4v-1zm-1 3h6v1H9v-1z"/></svg>
-        
-        <!-- Handbrake -->
         <svg class="svg-icon" id="ico-handbrake" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
       </div>
     </div>
@@ -273,26 +252,31 @@
     const segElements = document.querySelectorAll('#seg-wrapper .seg');
 
     window.addEventListener('message', (event) => {
-      const item = event.data;
-      if (!item) return;
+      let raw = event.data;
+      if (!raw) return;
 
-      // Handle visibility (jika template mengirim toggle show/hide HUD)
-      if (item.show !== undefined) {
+      // Unpack jika JG:VRP mengirim payload di dalam "message"
+      const item = (raw.message && typeof raw.message === 'object') ? raw.message : raw;
+
+      // Sembunyikan/munculkan HUD otomatis saat naik/turun kendaraan
+      if (raw.type === "Speedo" && raw.show !== undefined) {
+        document.getElementById('speedo-container').classList.toggle('hidden', !raw.show);
+      } else if (item.show !== undefined) {
         document.getElementById('speedo-container').classList.toggle('hidden', !item.show);
       }
 
       // 1. Kecepatan (Speed)
-      const spd = item.speed ?? item.speedo;
+      const spd = item.speed ?? item.speedo ?? item.curSpeed;
       if (spd !== undefined) {
         document.getElementById('speed').innerText = Math.round(spd);
       }
 
-      // 2. Satuan Unit (MPH / KMH)
+      // 2. Unit Satuan
       if (item.unit) {
         document.getElementById('speed-unit').innerText = item.unit.toUpperCase();
       }
 
-      // 3. Bahan Bakar (Fuel)
+      // 3. Fuel (Bensin)
       const fuelVal = item.fuel ?? item.gas;
       if (fuelVal !== undefined) {
         const roundedFuel = Math.min(100, Math.max(0, Math.round(fuelVal)));
@@ -303,13 +287,13 @@
       // 4. Kondisi Mesin / Health
       let healthVal = item.health ?? item.engineHealth;
       if (healthVal !== undefined) {
-        if (healthVal > 100) healthVal = (healthVal / 1000) * 100; // konversi GTA scale (0-1000) ke 0-100%
+        if (healthVal > 100) healthVal = (healthVal / 1000) * 100;
         const roundedHealth = Math.min(100, Math.max(0, Math.round(healthVal)));
         document.getElementById('health-bar').style.height = `${roundedHealth}%`;
         document.getElementById('health-val').innerText = `${roundedHealth}%`;
       }
 
-      // 5. RPM Segments (0.0 sampai 1.0)
+      // 5. RPM Segments
       if (item.rpm !== undefined) {
         const activeCount = Math.round(item.rpm * segElements.length);
         segElements.forEach((el, index) => {
@@ -317,35 +301,37 @@
         });
       }
 
-      // 6. Mileage / Jarak Tempuh
+      // 6. Mileage / Total Jarak
       const miles = item.mileage ?? item.odometer ?? item.distance;
       if (miles !== undefined) {
         document.getElementById('mileage').innerText = Math.round(miles).toString().padStart(5, '0');
       }
 
-      // 7. Lampu Sen (Indicators)
-      toggleBlink('ico-sen-left', item.indicatorLeft || item.signalLeft || (item.indicators && item.indicators.left));
-      toggleBlink('ico-sen-right', item.indicatorRight || item.signalRight || (item.indicators && item.indicators.right));
+      // 7. Lampu Sen
+      const leftSig = item.indicatorLeft || item.signalLeft || (item.indicators && item.indicators.left);
+      const rightSig = item.indicatorRight || item.signalRight || (item.indicators && item.indicators.right);
+      toggleBlink('ico-sen-left', leftSig);
+      toggleBlink('ico-sen-right', rightSig);
 
-      // 8. Lock / Unlock
-      const isLocked = item.locked ?? item.isLocked;
+      // 8. Lock / Unlock Kendaraan
+      const isLocked = item.locked ?? item.isLocked ?? (item.doorLockStatus === 2);
       if (isLocked !== undefined) {
         toggleColor('ico-lock', isLocked, 'fill-red', 'fill-green');
       }
 
-      // 9. Engine (Mesin Hidup/Mati)
+      // 9. Mesin Hidup / Mati
       const isEngineOn = item.engine ?? item.engineRunning;
       if (isEngineOn !== undefined) {
         toggleColor('ico-engine', isEngineOn, 'fill-green');
       }
 
-      // 10. Lampu Utama (Lights)
+      // 10. Lampu Utama
       const lightsOn = item.lights || item.headlights || (item.lightState && item.lightState > 0);
       if (lightsOn !== undefined) {
         toggleColor('ico-lights', lightsOn, 'fill-cyan');
       }
 
-      // 11. Seatbelt (Merah bila belum terpasang)
+      // 11. Seatbelt
       if (item.seatbelt !== undefined) {
         toggleColor('ico-seatbelt', !item.seatbelt, 'fill-red');
       }
