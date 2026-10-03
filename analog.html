@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Analog Speedometer JG:VRP</title>
+  
+  <!-- Futuristic Cyberpunk Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.6);
+      --cyan-dim: rgba(0, 240, 255, 0.2);
+      --orange: #ff9d00;
+      --orange-glow: rgba(255, 157, 0, 0.6);
+      --red: #ff2a55;
+      --red-glow: rgba(255, 42, 85, 0.7);
+      --green: #00ff88;
+      --green-glow: rgba(0, 255, 136, 0.7);
+      --blue: #1a8cff;
+      --bg-dark: rgba(8, 14, 24, 0.88);
+      --bg-card: rgba(12, 19, 32, 0.88);
+      --border-cyan: rgba(0, 240, 255, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: transparent;
+      overflow: hidden;
+      font-family: 'Rajdhani', sans-serif;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* === HUD CONTAINER (Pojok Kanan Bawah) === */
+    .hud-wrapper {
+      position: absolute;
+      bottom: 25px;
+      right: 35px;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.75));
+    }
+
+    /* === BAR HEALTH & FUEL CYBER GLASSMORPHISM === */
+    .bars-container {
+      display: flex;
+      gap: 10px;
+      background: var(--bg-card);
+      padding: 12px 10px 10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-cyan);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bar-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .bar-icon {
+      width: 14px;
+      height: 14px;
+      fill: rgba(255, 255, 255, 0.6);
+      transition: fill 0.2s, filter 0.2s;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .bar-track {
+      width: 12px;
+      height: 96px;
+      background: rgba(4, 8, 16, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .bar-fill {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      border-radius: 4px;
+      transition: height 0.15s ease-out, background 0.3s, box-shadow 0.3s;
+    }
+
+    .health-fill {
+      background: linear-gradient(180deg, #00f0ff 0%, #00ff88 100%);
+      box-shadow: 0 0 10px var(--cyan);
+      height: 100%;
+    }
+
+    .fuel-fill {
+      background: linear-gradient(180deg, #ffc400 0%, #ff7700 100%);
+      box-shadow: 0 0 10px var(--orange);
+      height: 100%;
+    }
+
+    /* Grids pembagi bar */
+    .bar-track::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 23px,
+        rgba(255, 255, 255, 0.18) 23px,
+        rgba(255, 255, 255, 0.18) 24px
+      );
+      pointer-events: none;
+    }
+
+    .bar-percent {
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .health-txt { color: #00ffcc; text-shadow: 0 0 6px rgba(0, 255, 204, 0.6); }
+    .fuel-txt { color: #ff9d00; text-shadow: 0 0 6px rgba(255, 157, 0, 0.6); }
+
+    /* === SPEEDOMETER ANALOG DIAL CLUSTER === */
+    .dial-container {
+      position: relative;
+      width: 290px;
+      height: 290px;
+      border-radius: 50%;
+      background: var(--bg-dark);
+      border: 1.5px solid var(--border-cyan);
+      box-shadow: 
+        0 0 25px rgba(0, 240, 255, 0.25), 
+        inset 0 0 40px rgba(0, 0, 0, 0.95),
+        inset 0 0 15px rgba(0, 240, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    /* Outer Ring Bezel & Ticks */
+    .dial-outer-border {
+      fill: none;
+      stroke: rgba(0, 240, 255, 0.28);
+      stroke-width: 1.5;
+      stroke-dasharray: 5 3;
+    }
+
+    .dial-inner-ring {
+      fill: none;
+      stroke: rgba(0, 240, 255, 0.16);
+      stroke-width: 1;
+    }
+
+    .dial-track-guide {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 1;
+    }
+
+    .dial-rpm-guide {
+      fill: none;
+      stroke: rgba(0, 240, 255, 0.12);
+      stroke-width: 1;
+    }
+
+    /* Speed Arc Track & Dynamic Glowing Fill */
+    .speed-arc-track {
+      fill: none;
+      stroke: rgba(0, 240, 255, 0.12);
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+
+    .speed-arc-fill {
+      fill: none;
+      stroke: url(#speedArcGrad);
+      stroke-width: 5;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px #00f0ff);
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      transition: stroke-dashoffset 0.08s linear;
+    }
+
+    /* RPM Arc Track & Fill */
+    .rpm-arc-track {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .rpm-arc-fill {
+      fill: none;
+      stroke: #00f0ff;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px #00f0ff);
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      transition: stroke-dashoffset 0.08s linear, stroke 0.2s, filter 0.2s;
+    }
+
+    /* SVG Ticks */
+    .tick-major {
+      stroke: #00f0ff;
+      stroke-width: 2.2;
+      filter: drop-shadow(0 0 3px #00f0ff);
+    }
+
+    .tick-minor {
+      stroke: rgba(0, 240, 255, 0.35);
+      stroke-width: 1.2;
+    }
+
+    .tick-red {
+      stroke: #ff2a55;
+      filter: drop-shadow(0 0 4px #ff2a55);
+    }
+
+    /* Speed Digits Melingkar */
+    .gauge-num {
+      fill: #00f0ff;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+    }
+
+    .num-red {
+      fill: #ff2a55;
+      filter: drop-shadow(0 0 4px rgba(255, 42, 85, 0.8));
+    }
+
+    /* SVG Status Indicators */
+    .svg-icon-g {
+      transition: transform 0.2s;
+    }
+
+    .indicator-shape {
+      fill: rgba(255, 255, 255, 0.2);
+      transition: fill 0.2s, filter 0.2s, opacity 0.2s;
+    }
+
+    .svg-icon-g.fill-cyan .indicator-shape {
+      fill: #00f0ff !important;
+      filter: drop-shadow(0 0 8px #00f0ff);
+    }
+
+    .svg-icon-g.fill-blue .indicator-shape {
+      fill: #1a8cff !important;
+      filter: drop-shadow(0 0 8px #1a8cff);
+    }
+
+    .svg-icon-g.fill-green .indicator-shape {
+      fill: #00ff88 !important;
+      filter: drop-shadow(0 0 8px #00ff88);
+    }
+
+    .svg-icon-g.fill-red .indicator-shape {
+      fill: #ff3344 !important;
+      filter: drop-shadow(0 0 8px #ff3344);
+    }
+
+    .svg-icon-g.blinking .indicator-shape {
+      animation: blink-indicator 0.5s infinite alternate ease-in-out;
+      fill: #00ff88 !important;
+      filter: drop-shadow(0 0 10px #00ff88);
+    }
+
+    @keyframes blink-indicator {
+      0% { opacity: 0.15; }
+      100% { opacity: 1; }
+    }
+
+    /* === JARUM PENUNJUK (ANALOG NEEDLE) === */
+    #needle {
+      transform-box: view-box;
+      transform-origin: 150px 150px;
+      transform: rotate(-135deg);
+      transition: transform 0.08s cubic-bezier(0.12, 0.82, 0.32, 1);
+      will-change: transform;
+    }
+
+    /* === CLUSTER INTERNAL DIGITAL OVERLAYS === */
+    .center-display {
+      position: absolute;
+      top: 86px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .speed-val {
+      font-size: 46px;
+      font-weight: 700;
+      line-height: 0.85;
+      color: #00f0ff;
+      text-shadow: 0 0 16px rgba(0, 240, 255, 0.9), 0 0 32px rgba(0, 240, 255, 0.45);
+      letter-spacing: -1px;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .unit-val {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #00f0ff;
+      margin-top: 2px;
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+    }
+
+    /* Area Bawah Dial Cluster */
+    .bottom-display {
+      position: absolute;
+      bottom: 22px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Kotak Gear */
+    .gear-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1px 12px;
+      background: rgba(255, 157, 0, 0.12);
+      border: 1px solid rgba(255, 157, 0, 0.55);
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(255, 157, 0, 0.3), inset 0 0 6px rgba(0, 0, 0, 0.7);
+    }
+
+    .gear-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ff9d00;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px rgba(255, 157, 0, 0.8);
+    }
+
+    /* RPM Segments */
+    .segments {
+      display: flex;
+      gap: 3px;
+      margin: 1px 0;
+    }
+
+    .seg {
+      width: 7px;
+      height: 5px;
+      border-radius: 1px;
+      background: rgba(0, 240, 255, 0.16);
+      transition: background 0.08s, box-shadow 0.08s;
+    }
+
+    .seg.active {
+      background: #00f0ff;
+      box-shadow: 0 0 6px #00f0ff;
+    }
+
+    .seg:nth-child(n+7).active {
+      background: #ff2a55;
+      box-shadow: 0 0 6px #ff2a55;
+    }
+
+    /* Digital Odometer Box */
+    .odometer-box {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 10px;
+      background: rgba(4, 8, 16, 0.9);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-radius: 4px;
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 240, 255, 0.15);
+    }
+
+    .mileage-val {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Share Tech Mono', monospace, 'Rajdhani';
+      color: rgba(255, 255, 255, 0.95);
+      letter-spacing: 1px;
+    }
+
+    .odo-unit {
+      font-size: 10px;
+      font-weight: 700;
+      color: #00f0ff;
+      letter-spacing: 0.5px;
+    }
+
+    /* === INTERACTIVE DEMO CONTROLLER (PILIHAN UNTUK TESTING DI BROWSER) === */
+    .demo-toggle-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: rgba(12, 19, 32, 0.85);
+      border: 1px solid var(--border-cyan);
+      color: var(--cyan);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 9999;
+      opacity: 0.35;
+      transition: opacity 0.25s, transform 0.2s, box-shadow 0.25s;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .demo-toggle-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    }
+
+    .demo-panel {
+      position: fixed;
+      top: 55px;
+      left: 15px;
+      background: rgba(8, 14, 24, 0.94);
+      border: 1px solid var(--border-cyan);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      z-index: 9998;
+      width: 290px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 240, 255, 0.2);
+      backdrop-filter: blur(12px);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .demo-panel.show {
+      display: flex;
+    }
+
+    .demo-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 1px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      padding-bottom: 6px;
+    }
+
+    .demo-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      gap: 10px;
+    }
+
+    .demo-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    .demo-btn-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .demo-btn {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      padding: 5px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-btn:hover {
+      background: rgba(0, 240, 255, 0.25);
+      border-color: var(--cyan);
+    }
+
+    .demo-btn.active {
+      background: var(--cyan);
+      color: #080e18;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HUD WRAPPER (Pojok Kanan Bawah) -->
+  <div class="hud-wrapper">
+    <!-- Bar Vertikal (Health & Fuel) -->
+    <div class="bars-container">
+      <!-- Health Bar -->
+      <div class="bar-item">
+        <div class="bar-header">
+          <!-- Heart Icon -->
+          <svg class="bar-icon" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span class="bar-label">HP</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill health-fill" id="health-bar"></div>
+        </div>
+        <span class="bar-percent health-txt" id="health-val">100%</span>
+      </div>
+
+      <!-- Fuel Bar -->
+      <div class="bar-item">
+        <div class="bar-header">
+          <!-- Gas Pump Icon -->
+          <svg class="bar-icon" viewBox="0 0 24 24">
+            <path d="M19.77 7.23l.01-.01-3.72-3.72L15 4.56l2.11 2.11c-.94.36-1.61 1.26-1.61 2.33 0 1.38 1.12 2.5 2.5 2.5.36 0 .69-.08 1-.22v5.72c0 .55-.45 1-1 1s-1-.45-1-1V14c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v16h10v-7.5h1.5v5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V9c0-.69-.28-1.32-.73-1.77zM12 10H6V5h6v5z"/>
+          </svg>
+          <span class="bar-label">GAS</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill fuel-fill" id="fuel-bar"></div>
+        </div>
+        <span class="bar-percent fuel-txt" id="fuel-val">100%</span>
+      </div>
+    </div>
+
+    <!-- Speedometer Analog Dial Cluster -->
+    <div class="dial-container">
+      <svg class="gauge-svg" viewBox="0 0 300 300">
+        <defs>
+          <!-- Radial Gradient Latar Dial -->
+          <radialGradient id="dialBgGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#0f1a2c" stop-opacity="0.96" />
+            <stop offset="70%" stop-color="#080e18" stop-opacity="0.94" />
+            <stop offset="100%" stop-color="#04070d" stop-opacity="0.98" />
+          </radialGradient>
+
+          <!-- Gradient Jarum Neon -->
+          <linearGradient id="needleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="30%" stop-color="#ff3366" />
+            <stop offset="85%" stop-color="#ff0033" />
+            <stop offset="100%" stop-color="#b30024" />
+          </linearGradient>
+
+          <!-- Gradient Dynamic Speed Arc -->
+          <linearGradient id="speedArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00f0ff" />
+            <stop offset="65%" stop-color="#00f0ff" />
+            <stop offset="85%" stop-color="#ff9d00" />
+            <stop offset="100%" stop-color="#ff2a55" />
+          </linearGradient>
+
+          <!-- Glow Filter Jarum -->
+          <filter id="needleGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="#ff2a55" flood-opacity="0.85" />
+            <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#ff0033" flood-opacity="0.45" />
+          </filter>
+
+          <!-- Glow Filter Hub Tengah -->
+          <filter id="hubGlow" x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00f0ff" flood-opacity="0.5" />
+          </filter>
+        </defs>
+
+        <!-- Latar Belakang & Ring Bezel -->
+        <circle cx="150" cy="150" r="146" class="dial-outer-border" />
+        <circle cx="150" cy="150" r="142" fill="url(#dialBgGrad)" />
+
+        <!-- Cincin Geometri Cyberpunk -->
+        <circle cx="150" cy="150" r="132" class="dial-inner-ring" />
+        <circle cx="150" cy="150" r="126" class="dial-track-guide" />
+        <circle cx="150" cy="150" r="76" class="dial-rpm-guide" />
+
+        <!-- Track & Dynamic Arc Kecepatan -->
+        <path d="M 60.90 239.10 A 126 126 0 1 1 239.10 239.10" class="speed-arc-track" />
+        <path id="speed-arc-fill" d="M 60.90 239.10 A 126 126 0 1 1 239.10 239.10" class="speed-arc-fill" pathLength="100" />
+
+        <!-- Track & Dynamic Arc RPM -->
+        <path d="M 96.26 203.74 A 76 76 0 1 1 203.74 203.74" class="rpm-arc-track" />
+        <path id="rpm-arc-fill" d="M 96.26 203.74 A 76 76 0 1 1 203.74 203.74" class="rpm-arc-fill" pathLength="100" />
+
+        <!-- Garis Ukur (Ticks) & Angka (Di-generate dinamis di JavaScript) -->
+        <g id="gauge-ticks"></g>
+        <g id="gauge-labels"></g>
+
+        <!-- Ikon-Ikon Status Internal Cluster -->
+        <!-- Sen Kiri -->
+        <g id="ico-sen-left" class="svg-icon-g" transform="translate(90, 68)">
+          <polygon points="12,0 3,7 12,14 12,10 18,10 18,4 12,4" class="indicator-shape" />
+        </g>
+
+        <!-- Lampu Headlight -->
+        <g id="ico-lights" class="svg-icon-g" transform="translate(141, 60)">
+          <path d="M12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm-2 18h4v1h-4v-1zm-1 3h6v1H9v-1z" 
+                class="indicator-shape" transform="scale(0.8)" />
+        </g>
+
+        <!-- Sen Kanan -->
+        <g id="ico-sen-right" class="svg-icon-g" transform="translate(192, 68)">
+          <polygon points="6,0 15,7 6,14 6,10 0,10 0,4 6,4" class="indicator-shape" />
+        </g>
+
+        <!-- Engine Status -->
+        <g id="ico-engine" class="svg-icon-g" transform="translate(86, 142)">
+          <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.42-3.58 8-8 8s-8-3.58-8-8c0-2.42 1.08-4.6 2.79-6.07l-1.4-1.42A9.914 9.914 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.84-1.19-5.4-3.17-6.83z" 
+                class="indicator-shape" transform="scale(0.82)" />
+        </g>
+
+        <!-- Seatbelt Warning -->
+        <g id="ico-seatbelt" class="svg-icon-g" transform="translate(196, 142)">
+          <path d="M16 3H8C6.9 3 6 3.9 6 5v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4.5l-3.5 3.5 3.5 3.5V16l-5-5 5-5v1.5z" 
+                class="indicator-shape" transform="scale(0.82)" />
+        </g>
+
+        <!-- Jarum Analog (Needle) -->
+        <g id="needle">
+          <!-- Bilah Jarum -->
+          <polygon points="146,155 147.5,45 150,22 152.5,45 154,155" fill="url(#needleGrad)" filter="url(#needleGlow)" />
+          <!-- Sinar Inti Putih Jarum -->
+          <line x1="150" y1="28" x2="150" y2="150" stroke="#ffffff" stroke-width="1.5" opacity="0.95" />
+          <!-- Ekor Jarum -->
+          <polygon points="147.5,150 148,172 152,172 152.5,150" fill="#ff2a55" opacity="0.75" />
+          <!-- Hub Pivot Tengah -->
+          <circle cx="150" cy="150" r="17" fill="#0b121e" stroke="#00f0ff" stroke-width="2" filter="url(#hubGlow)" />
+          <circle cx="150" cy="150" r="10.5" fill="#142132" stroke="#ff2a55" stroke-width="1.5" />
+          <circle cx="150" cy="150" r="4" fill="#00f0ff" />
+        </g>
+      </svg>
+
+      <!-- Digital Speed Display (Area Tengah Atas) -->
+      <div class="center-display">
+        <div class="speed-val" id="speed">0</div>
+        <div class="unit-val" id="unit-label">MPH</div>
+      </div>
+
+      <!-- Area Bawah Cluster (Gear, RPM Segments, Odometer) -->
+      <div class="bottom-display">
+        <!-- Gear Box -->
+        <div class="gear-box">
+          <span class="gear-val" id="gear-label">GEAR 1</span>
+        </div>
+
+        <!-- Segmen Bar RPM (Sesuai ID asli #seg-wrapper .seg) -->
+        <div class="segments" id="seg-wrapper">
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+          <div class="seg"></div>
+        </div>
+
+        <!-- Odometer Digital Box -->
+        <div class="odometer-box">
+          <span class="mileage-val" id="odometer">0.0</span>
+          <span class="odo-unit" id="odo-unit">MI</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE DEMO CONTROLLER (Testing di browser) -->
+  <button class="demo-toggle-btn" id="demo-toggle-btn" onclick="toggleDemoPanel()">⚡ DEMO HUD</button>
+  <div class="demo-panel" id="demo-panel">
+    <div class="demo-title">
+      <span>CYBER SPEEDO TEST PANEL</span>
+      <span style="cursor:pointer; color:#ff3344;" onclick="toggleDemoPanel()">✖</span>
+    </div>
+    
+    <div class="demo-row">
+      <span style="width: 50px;">Speed:</span>
+      <input type="range" min="0" max="89.4" step="0.5" value="0" id="range-speed" oninput="onSpeedSlider(this.value)">
+      <span id="demo-speed-val" style="width: 45px; text-align:right;">0 m/s</span>
+    </div>
+
+    <div class="demo-row">
+      <span style="width: 50px;">RPM:</span>
+      <input type="range" min="0" max="1" step="0.01" value="0" id="range-rpm" oninput="setRPM(parseFloat(this.value))">
+    </div>
+
+    <div class="demo-row">
+      <span style="width: 50px;">Health:</span>
+      <input type="range" min="0" max="1" step="0.01" value="1" id="range-health" oninput="setHealth(parseFloat(this.value))">
+    </div>
+
+    <div class="demo-row">
+      <span style="width: 50px;">Fuel:</span>
+      <input type="range" min="0" max="1" step="0.01" value="1" id="range-fuel" oninput="setFuel(parseFloat(this.value))">
+    </div>
+
+    <div class="demo-btn-grid">
+      <button class="demo-btn" onclick="toggleEngineTest()">Engine</button>
+      <button class="demo-btn" onclick="cycleLightTest()">Lights</button>
+      <button class="demo-btn" onclick="toggleBeltTest()">Seatbelt</button>
+      <button class="demo-btn" onclick="toggleLeftTest()">Sen Kiri</button>
+      <button class="demo-btn" onclick="toggleRightTest()">Sen Kanan</button>
+      <button class="demo-btn" onclick="cycleGearTest()">Gear</button>
+      <button class="demo-btn" onclick="cycleUnitTest()">Unit</button>
+      <button class="demo-btn" style="grid-column: span 2;" id="btn-auto-sim" onclick="toggleAutoDrive()">▶ Auto Drive</button>
+    </div>
+  </div>
+
+  <script>
+    // === KONFIGURASI GLOBAL & STATE JG:VRP ===
+    let speedMode = 1; // 0: KMH, 1: MPH, 2: Knots
+    const segElements = document.querySelectorAll('#seg-wrapper .seg');
+
+    // === GENERATE GARIS UKUR (TICKS) & ANGKA MELINGKAR SECARA PRESISI ===
+    function initDialTicks() {
+      const ticksGroup = document.getElementById('gauge-ticks');
+      const labelsGroup = document.getElementById('gauge-labels');
+      if (!ticksGroup || !labelsGroup) return;
+
+      const cx = 150, cy = 150;
+      const rOuter = 126;
+      const rMajorInner = 114;
+      const rMinorInner = 120;
+      const rText = 98;
+
+      // Rentang angka dari 0 hingga 200 (setiap kelipatan 10 membuat tick, kelipatan 20 membuat major tick + angka)
+      for (let s = 0; s <= 200; s += 10) {
+        const isMajor = (s % 20 === 0);
+        // Sudut sweep: 0 speed = -135deg, 200 speed = +135deg (Total sweep = 270 derajat)
+        const angleDeg = -135 + (s / 200) * 270;
+        const rad = (angleDeg - 90) * (Math.PI / 180);
+
+        const x1 = cx + rOuter * Math.cos(rad);
+        const y1 = cy + rOuter * Math.sin(rad);
+        const rInner = isMajor ? rMajorInner : rMinorInner;
+        const x2 = cx + rInner * Math.cos(rad);
+        const y2 = cy + rInner * Math.sin(rad);
+
+        // Garis Ukur (Tick)
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1.toFixed(2));
+        line.setAttribute('y1', y1.toFixed(2));
+        line.setAttribute('x2', x2.toFixed(2));
+        line.setAttribute('y2', y2.toFixed(2));
+        line.setAttribute('class', isMajor ? (s >= 160 ? 'tick-major tick-red' : 'tick-major') : 'tick-minor');
+        ticksGroup.appendChild(line);
+
+        // Angka Kecepatan Melingkar
+        if (isMajor) {
+          const tx = cx + rText * Math.cos(rad);
+          const ty = cy + rText * Math.sin(rad);
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', tx.toFixed(2));
+          text.setAttribute('y', (ty + 1).toFixed(2));
+          text.setAttribute('class', s >= 160 ? 'gauge-num num-red' : 'gauge-num');
+          text.textContent = s;
+          labelsGroup.appendChild(text);
+        }
+      }
+    }
+
+    // Inisialisasi Ticks saat dokumen siap
+    initDialTicks();
+
+
+    // ==============================================================
+    // === FUNGSI-FUNGSI GLOBAL RESMI SESUAI TEMPLATE JG:VRP ========
+    // ==============================================================
+
+    /**
+     * Mengatur satuan kecepatan
+     * @param {number} mode (0: KMH, 1: MPH, 2: Knots)
+     */
+    function setSpeedMode(mode) {
+      speedMode = mode;
+      const unitEl = document.getElementById('unit-label');
+      const odoUnitEl = document.getElementById('odo-unit');
+      switch(mode) {
+        case 1:
+          if (unitEl) unitEl.innerText = 'MPH';
+          if (odoUnitEl) odoUnitEl.innerText = 'MI';
+          break;
+        case 2:
+          if (unitEl) unitEl.innerText = 'KNOTS';
+          if (odoUnitEl) odoUnitEl.innerText = 'KN';
+          break;
+        default:
+          if (unitEl) unitEl.innerText = 'KMH';
+          if (odoUnitEl) odoUnitEl.innerText = 'KM';
+      }
+    }
+
+    /**
+     * Menerima kecepatan m/s dari game, mengonversi ke satuan aktif,
+     * serta memutar jarum analog (-135deg s/d +135deg).
+     * @param {number} speed (kecepatan m/s)
+     */
+    function setSpeed(speed) {
+      let finalSpeed = 0;
+      switch(speedMode) {
+        case 1: finalSpeed = Math.round(speed * 2.236936); break;
+        case 2: finalSpeed = Math.round(speed * 1.943844); break;
+        default: finalSpeed = Math.round(speed * 3.6);
+      }
+
+      // Update Angka Digital
+      const speedEl = document.getElementById('speed');
+      if (speedEl) speedEl.innerText = finalSpeed;
+
+      // Putar Jarum Analog (-135deg pada 0, +135deg pada 200)
+      const maxScale = 200;
+      const clampedSpeed = Math.max(0, Math.min(finalSpeed, 220)); // sedikit toleransi batas atas
+      const angle = -135 + (clampedSpeed / maxScale) * 270;
+
+      const needle = document.getElementById('needle');
+      if (needle) {
+        needle.style.transform = `rotate(${angle}deg)`;
+        needle.setAttribute('transform', `rotate(${angle}, 150, 150)`);
+      }
+
+      // Dynamic Speed Arc Fill (0 s/d 100)
+      const speedArc = document.getElementById('speed-arc-fill');
+      if (speedArc) {
+        const progress = Math.min(1, Math.max(0, finalSpeed / maxScale));
+        speedArc.style.strokeDashoffset = (100 * (1 - progress)).toFixed(2);
+      }
+    }
+
+    /**
+     * Mengatur putaran mesin / RPM
+     * @param {number} rpm (0.0 sampai 1.0)
+     */
+    function setRPM(rpm) {
+      const clampedRpm = Math.max(0, Math.min(1, Number(rpm) || 0));
+
+      // 1. Arc Analog RPM pada Dial
+      const rpmArc = document.getElementById('rpm-arc-fill');
+      if (rpmArc) {
+        rpmArc.style.strokeDashoffset = (100 * (1 - clampedRpm)).toFixed(2);
+        if (clampedRpm > 0.85) {
+          rpmArc.style.stroke = '#ff2a55';
+          rpmArc.style.filter = 'drop-shadow(0 0 8px #ff2a55)';
+        } else {
+          rpmArc.style.stroke = '#00f0ff';
+          rpmArc.style.filter = 'drop-shadow(0 0 6px #00f0ff)';
+        }
+      }
+
+      // 2. Segmen Bar RPM di Bawah Dial (Kompatibilitas Template)
+      const activeCount = Math.round(clampedRpm * segElements.length);
+      segElements.forEach((el, index) => {
+        el.classList.toggle('active', index < activeCount);
+      });
+    }
+
+    /**
+     * Mengatur persentase bensin
+     * @param {number} fuel (0.0 sampai 1.0)
+     */
+    function setFuel(fuel) {
+      const pct = Math.min(100, Math.max(0, Math.round(fuel * 100)));
+      const fuelBar = document.getElementById('fuel-bar');
+      const fuelVal = document.getElementById('fuel-val');
+      if (fuelBar) fuelBar.style.height = `${pct}%`;
+      if (fuelVal) fuelVal.innerText = `${pct}%`;
+
+      // Peringatan Merah jika Bensin <= 15%
+      if (fuelBar) {
+        if (pct <= 15) {
+          fuelBar.style.background = '#ff2a55';
+          fuelBar.style.boxShadow = '0 0 12px #ff2a55';
+        } else {
+          fuelBar.style.background = 'linear-gradient(180deg, #ffc400 0%, #ff7700 100%)';
+          fuelBar.style.boxShadow = '0 0 10px #ff9d00';
+        }
+      }
+    }
+
+    /**
+     * Mengatur persentase kondisi kendaraan / health
+     * @param {number} health (0.0 sampai 1.0)
+     */
+    function setHealth(health) {
+      const pct = Math.min(100, Math.max(0, Math.round(health * 100)));
+      const healthBar = document.getElementById('health-bar');
+      const healthVal = document.getElementById('health-val');
+      if (healthBar) healthBar.style.height = `${pct}%`;
+      if (healthVal) healthVal.innerText = `${pct}%`;
+
+      // Peringatan Merah jika Health <= 25%
+      if (healthBar) {
+        if (pct <= 25) {
+          healthBar.style.background = '#ff3344';
+          healthBar.style.boxShadow = '0 0 12px #ff3344';
+        } else {
+          healthBar.style.background = 'linear-gradient(180deg, #00f0ff 0%, #00ff88 100%)';
+          healthBar.style.boxShadow = '0 0 10px #00f0ff';
+        }
+      }
+    }
+
+    /**
+     * Mengatur gear transmisi (0: R, 1, 2, 3...)
+     * @param {number|string} gear
+     */
+    function setGear(gear) {
+      const gearEl = document.getElementById('gear-label');
+      if (!gearEl) return;
+      
+      if (gear === 0 || gear === '0' || gear === 'R') {
+        gearEl.innerText = 'R';
+        gearEl.style.color = '#ff3344';
+      } else if (gear === 'N' || gear === 'P') {
+        gearEl.innerText = String(gear);
+        gearEl.style.color = '#00f0ff';
+      } else {
+        const g = Number(gear);
+        gearEl.innerText = isNaN(g) ? String(gear) : `GEAR ${g}`;
+        gearEl.style.color = '#ff9d00';
+      }
+    }
+
+    /**
+     * Mengatur indikator mesin (true: menyala hijau, false: mati)
+     * @param {boolean} state
+     */
+    function setEngine(state) {
+      const ico = document.getElementById('ico-engine');
+      if (!ico) return;
+      if (state) {
+        ico.classList.add('fill-green');
+      } else {
+        ico.classList.remove('fill-green');
+      }
+    }
+
+    /**
+     * Mengatur lampu kendaraan (0: Off, 1: On, 2: High Beam)
+     * @param {number} state
+     */
+    function setHeadlights(state) {
+      const ico = document.getElementById('ico-lights');
+      if (!ico) return;
+      ico.classList.remove('fill-cyan', 'fill-blue');
+      if (state === 2) {
+        ico.classList.add('fill-blue');
+      } else if (state > 0) {
+        ico.classList.add('fill-cyan');
+      }
+    }
+
+    /**
+     * Indikator Sen Kiri (true: berkedip hijau)
+     * @param {boolean} state
+     */
+    function setLeftIndicator(state) {
+      const el = document.getElementById('ico-sen-left');
+      if (!el) return;
+      if (state) {
+        el.classList.add('blinking');
+      } else {
+        el.classList.remove('blinking');
+      }
+    }
+
+    /**
+     * Indikator Sen Kanan (true: berkedip hijau)
+     * @param {boolean} state
+     */
+    function setRightIndicator(state) {
+      const el = document.getElementById('ico-sen-right');
+      if (!el) return;
+      if (state) {
+        el.classList.add('blinking');
+      } else {
+        el.classList.remove('blinking');
+      }
+    }
+
+    /**
+     * Indikator Sabuk Pengaman (false: peringatan merah menyala)
+     * @param {boolean} state
+     */
+    function setSeatbelts(state) {
+      const ico = document.getElementById('ico-seatbelt');
+      if (!ico) return;
+      if (!state) {
+        ico.classList.add('fill-red');
+      } else {
+        ico.classList.remove('fill-red');
+      }
+    }
+
+    /**
+     * Mengatur jarak tempuh / odometer digital
+     * @param {number|string} distance
+     */
+    function setOdometer(distance) {
+      const odo = document.getElementById('odometer');
+      if (odo) odo.innerText = Number(distance).toFixed(1);
+    }
+
+
+    // ==============================================================
+    // === SCRIPT TESTING BROWSER & SIMULASI AUTO-DRIVE =============
+    // ==============================================================
+    let testEngine = false;
+    let testLights = 0;
+    let testSeatbelt = false;
+    let testSenLeft = false;
+    let testSenRight = false;
+    let testGearIndex = 1;
+    const testGears = [0, 1, 2, 3, 4, 5, 6];
+    let autoSimInterval = null;
+
+    function toggleDemoPanel() {
+      const p = document.getElementById('demo-panel');
+      if (p) p.classList.toggle('show');
+    }
+
+    function onSpeedSlider(val) {
+      const v = parseFloat(val);
+      document.getElementById('demo-speed-val').innerText = `${v.toFixed(1)} m/s`;
+      setSpeed(v);
+    }
+
+    function toggleEngineTest() {
+      testEngine = !testEngine;
+      setEngine(testEngine);
+    }
+
+    function cycleLightTest() {
+      testLights = (testLights + 1) % 3;
+      setHeadlights(testLights);
+    }
+
+    function toggleBeltTest() {
+      testSeatbelt = !testSeatbelt;
+      setSeatbelts(testSeatbelt);
+    }
+
+    function toggleLeftTest() {
+      testSenLeft = !testSenLeft;
+      setLeftIndicator(testSenLeft);
+    }
+
+    function toggleRightTest() {
+      testSenRight = !testSenRight;
+      setRightIndicator(testSenRight);
+    }
+
+    function cycleGearTest() {
+      testGearIndex = (testGearIndex + 1) % testGears.length;
+      setGear(testGears[testGearIndex]);
+    }
+
+    function cycleUnitTest() {
+      const nextMode = (speedMode + 1) % 3;
+      setSpeedMode(nextMode);
+      onSpeedSlider(document.getElementById('range-speed').value);
+    }
+
+    // Simulasi putaran gas, pergantian gear & kecepatan secara otomatis
+    function toggleAutoDrive() {
+      const btn = document.getElementById('btn-auto-sim');
+      if (autoSimInterval) {
+        clearInterval(autoSimInterval);
+        autoSimInterval = null;
+        btn.innerText = '▶ Auto Drive';
+        btn.classList.remove('active');
+        return;
+      }
+
+      btn.innerText = '⏹ Stop Sim';
+      btn.classList.add('active');
+      setEngine(true);
+      setSeatbelts(true);
+
+      let simSpeed = 0;
+      let simRPM = 0.2;
+      let simGear = 1;
+      let accelerating = true;
+      let odo = 142.0;
+
+      autoSimInterval = setInterval(() => {
+        if (accelerating) {
+          simSpeed += 0.7;
+          simRPM += 0.035;
+          if (simRPM >= 0.95) {
+            if (simGear < 6) {
+              simGear++;
+              simRPM = 0.45;
+              setGear(simGear);
+            } else {
+              accelerating = false;
+            }
+          }
+          if (simSpeed >= 70) accelerating = false;
+        } else {
+          simSpeed -= 1.2;
+          simRPM = Math.max(0.15, simRPM - 0.04);
+          if (simSpeed < 5) {
+            simSpeed = 0;
+            simGear = 1;
+            accelerating = true;
+            setGear(simGear);
+          }
+        }
+
+        odo += (simSpeed * 0.0003);
+        setSpeed(simSpeed);
+        setRPM(simRPM);
+        setOdometer(odo);
+
+        // Update Slider UI
+        document.getElementById('range-speed').value = simSpeed;
+        document.getElementById('range-rpm').value = simRPM;
+        document.getElementById('demo-speed-val').innerText = `${simSpeed.toFixed(1)} m/s`;
+      }, 50);
+    }
+
+    // Inisialisasi awal saat load
+    setSeatbelts(false); // default warning menyala
+    setHealth(1.0);
+    setFuel(0.85);
+    setOdometer(142.5);
+    setGear(1);
+    setSpeed(0);
+    setRPM(0);
+  </script>
+</body>
+</html>
