@@ -1,6 +1,6 @@
 # Cyber Analog Speedometer JG:VRP
 
-Custom HUD Speedometer Analog bergaya **Cyberpunk / Dark Neon** yang dirancang khusus untuk Jogjagamers GTA:VRP (CEF / SA-MP / RAGEMP).
+Custom HUD Speedometer Analog bergaya **Cyberpunk / Dark Neon** yang dirancang khusus untuk JGV:RP FiveM
 
 ## ✨ Karakteristik Desain & Tata Letak Terintegrasi (Compact Single-Dial)
 
